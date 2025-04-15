@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-search.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title>Mapa de Prueba</title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/multi-style-layer.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/leaflet-search.js"></script>
+        <script src="data/Departamentos_Bolivia_1.js"></script>
+        <script src="data/AreaProtegida_Nacional_2018_2.js"></script>
+        <script src="data/centr_dept_3.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[-23.217055176482116,-73.25761253877201],[-11.195722564234798,-55.38641974467823]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var title = new L.Control({'position':'topright'});
+        title.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+        title.update = function () {
+            this._div.innerHTML = '<h2>Mapa de Prueba</h2>';
+        };
+        title.addTo(map);
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleHybrid_0');
+        map.getPane('pane_GoogleHybrid_0').style.zIndex = 400;
+        var layer_GoogleHybrid_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleHybrid_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleHybrid_0;
+        map.addLayer(layer_GoogleHybrid_0);
+        function pop_Departamentos_Bolivia_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['gml_id'] !== null ? autolinker.link(String(feature.properties['gml_id']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID'] !== null ? autolinker.link(String(feature.properties['OBJECTID']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['COD_DEP'] !== null ? autolinker.link(String(feature.properties['COD_DEP']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">NOM_DEP</th>\
+                        <td>' + (feature.properties['NOM_DEP'] !== null ? autolinker.link(String(feature.properties['NOM_DEP']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DESCRIP'] !== null ? autolinker.link(String(feature.properties['DESCRIP']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Hombres'] !== null ? autolinker.link(String(feature.properties['Hombres']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Mujeres'] !== null ? autolinker.link(String(feature.properties['Mujeres']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['x_cord'] !== null ? autolinker.link(String(feature.properties['x_cord']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['y_cord'] !== null ? autolinker.link(String(feature.properties['y_cord']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Departamentos_Bolivia_1_0(feature) {
+            switch(String(feature.properties['NOM_DEP'])) {
+                case 'BENI':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(232,71,192,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'CHUQUISACA':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(211,185,37,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'COCHABAMBA':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(130,71,203,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'LA PAZ':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(125,164,236,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Lag Titicaca':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(74,234,210,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Lago Poopo':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(120,116,202,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Lago Uru Uru':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(216,67,119,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'ORURO':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(163,228,128,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'PANDO':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(202,151,109,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'POTOSI':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(183,81,201,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Salar Coipasa':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(214,47,39,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Salar Uyuni':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(168,222,21,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'SANTA CRUZ':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(119,237,172,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'TARIJA':
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(49,215,57,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_Departamentos_Bolivia_1',
+                opacity: 1,
+                color: 'rgba(26,169,217,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Departamentos_Bolivia_1');
+        map.getPane('pane_Departamentos_Bolivia_1').style.zIndex = 401;
+        map.getPane('pane_Departamentos_Bolivia_1').style['mix-blend-mode'] = 'normal';
+        var layer_Departamentos_Bolivia_1 = new L.geoJson(json_Departamentos_Bolivia_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Departamentos_Bolivia_1',
+            layerName: 'layer_Departamentos_Bolivia_1',
+            pane: 'pane_Departamentos_Bolivia_1',
+            onEachFeature: pop_Departamentos_Bolivia_1,
+            style: style_Departamentos_Bolivia_1_0,
+        });
+        bounds_group.addLayer(layer_Departamentos_Bolivia_1);
+        map.addLayer(layer_Departamentos_Bolivia_1);
+        function pop_AreaProtegida_Nacional_2018_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID'] !== null ? autolinker.link(String(feature.properties['ID']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['APROTS'] !== null ? autolinker.link(String(feature.properties['APROTS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">NOMBRE_AP_</th>\
+                        <td>' + (feature.properties['NOMBRE_AP_'] !== null ? autolinker.link(String(feature.properties['NOMBRE_AP_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">CATEGORIA</th>\
+                        <td>' + (feature.properties['CATEGORIA'] !== null ? autolinker.link(String(feature.properties['CATEGORIA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['BASE_LEG_1'] !== null ? autolinker.link(String(feature.properties['BASE_LEG_1']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">AREA</th>\
+                        <td>' + (feature.properties['AREA'] !== null ? autolinker.link(String(feature.properties['AREA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['HECTARES'] !== null ? autolinker.link(String(feature.properties['HECTARES']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_AreaProtegida_Nacional_2018_2_0(feature) {
+            switch(String(feature.properties['NOMBRE_AP_'])) {
+                case 'Aguarague':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(228,129,15,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Amboró':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(221,133,177,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Apolobamba':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(19,91,235,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Carrasco':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(176,205,114,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Cordillera de Sama':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(69,208,120,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Cotapata':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,108,223,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Eduardo Avaroa':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(41,202,230,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'El Palmar':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(240,98,207,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Estación Biológica del Beni':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(115,45,201,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Iñao':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(168,45,216,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Isiboro Securé':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(201,94,92,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Kaa-iya del Gran Chaco':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(13,201,132,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Madidi':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(237,212,110,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Manuripi':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(125,132,229,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Noel Kempff Mercado':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(59,18,226,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Otuquis':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(116,204,53,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Pilón Lajas':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(217,227,18,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Sajama':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(23,228,208,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'San Matías':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(211,86,117,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Tariquía':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(87,213,62,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Toro Toro':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(222,122,83,0.6)',
+                interactive: true,
+            }
+                    break;
+                case 'Tunari':
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(98,240,114,0.6)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_AreaProtegida_Nacional_2018_2',
+                opacity: 1,
+                color: 'rgba(38,89,128,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(106,182,236,0.6)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_AreaProtegida_Nacional_2018_2');
+        map.getPane('pane_AreaProtegida_Nacional_2018_2').style.zIndex = 402;
+        map.getPane('pane_AreaProtegida_Nacional_2018_2').style['mix-blend-mode'] = 'normal';
+        var layer_AreaProtegida_Nacional_2018_2 = new L.geoJson(json_AreaProtegida_Nacional_2018_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_AreaProtegida_Nacional_2018_2',
+            layerName: 'layer_AreaProtegida_Nacional_2018_2',
+            pane: 'pane_AreaProtegida_Nacional_2018_2',
+            onEachFeature: pop_AreaProtegida_Nacional_2018_2,
+            style: style_AreaProtegida_Nacional_2018_2_0,
+        });
+        bounds_group.addLayer(layer_AreaProtegida_Nacional_2018_2);
+        map.addLayer(layer_AreaProtegida_Nacional_2018_2);
+        function pop_centr_dept_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">NOM_DEP</th>\
+                        <td>' + (feature.properties['NOM_DEP'] !== null ? autolinker.link(String(feature.properties['NOM_DEP']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">x_cord</th>\
+                        <td>' + (feature.properties['x_cord'] !== null ? autolinker.link(String(feature.properties['x_cord']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">y_cord</th>\
+                        <td>' + (feature.properties['y_cord'] !== null ? autolinker.link(String(feature.properties['y_cord']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_centr_dept_3_0() {
+            return {
+                pane: 'pane_centr_dept_3',
+                radius: 6.4,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,255,1.0)',
+                interactive: true,
+            }
+        }
+        function style_centr_dept_3_1() {
+            return {
+                pane: 'pane_centr_dept_3',
+                radius: 1.4,
+                opacity: 1,
+                color: 'rgba(215,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(222,0,0,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_centr_dept_3');
+        map.getPane('pane_centr_dept_3').style.zIndex = 403;
+        map.getPane('pane_centr_dept_3').style['mix-blend-mode'] = 'normal';
+        var layer_centr_dept_3 = new L.geoJson.multiStyle(json_centr_dept_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_centr_dept_3',
+            layerName: 'layer_centr_dept_3',
+            pane: 'pane_centr_dept_3',
+            onEachFeature: pop_centr_dept_3,
+            pointToLayers: [function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_centr_dept_3_0(feature));
+            },function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_centr_dept_3_1(feature));
+            },
+        ]});
+        bounds_group.addLayer(layer_centr_dept_3);
+        map.addLayer(layer_centr_dept_3);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        var overlaysTree = [
+            {label: '<img src="legend/centr_dept_3.png" /> centr_dept', layer: layer_centr_dept_3},
+            {label: 'AreaProtegida_Nacional_2018<br /><table><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Aguarague0.png" /></td><td>Aguarague</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Amboró1.png" /></td><td>Amboró</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Apolobamba2.png" /></td><td>Apolobamba</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Carrasco3.png" /></td><td>Carrasco</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_CordilleradeSama4.png" /></td><td>Cordillera de Sama</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Cotapata5.png" /></td><td>Cotapata</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_EduardoAvaroa6.png" /></td><td>Eduardo Avaroa</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_ElPalmar7.png" /></td><td>El Palmar</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_EstaciónBiológicadelBeni8.png" /></td><td>Estación Biológica del Beni</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Iñao9.png" /></td><td>Iñao</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_IsiboroSecuré10.png" /></td><td>Isiboro Securé</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_KaaiyadelGranChaco11.png" /></td><td>Kaa-iya del Gran Chaco</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Madidi12.png" /></td><td>Madidi</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Manuripi13.png" /></td><td>Manuripi</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_NoelKempffMercado14.png" /></td><td>Noel Kempff Mercado</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Otuquis15.png" /></td><td>Otuquis</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_PilónLajas16.png" /></td><td>Pilón Lajas</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Sajama17.png" /></td><td>Sajama</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_SanMatías18.png" /></td><td>San Matías</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Tariquía19.png" /></td><td>Tariquía</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_ToroToro20.png" /></td><td>Toro Toro</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_Tunari21.png" /></td><td>Tunari</td></tr><tr><td style="text-align: center;"><img src="legend/AreaProtegida_Nacional_2018_2_22.png" /></td><td></td></tr></table>', layer: layer_AreaProtegida_Nacional_2018_2},
+            {label: 'Departamentos_Bolivia<br /><table><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_BENI0.png" /></td><td>BENI</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_CHUQUISACA1.png" /></td><td>CHUQUISACA</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_COCHABAMBA2.png" /></td><td>COCHABAMBA</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_LAPAZ3.png" /></td><td>LA PAZ</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_LagTiticaca4.png" /></td><td>Lag Titicaca</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_LagoPoopo5.png" /></td><td>Lago Poopo</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_LagoUruUru6.png" /></td><td>Lago Uru Uru</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_ORURO7.png" /></td><td>ORURO</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_PANDO8.png" /></td><td>PANDO</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_POTOSI9.png" /></td><td>POTOSI</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_SalarCoipasa10.png" /></td><td>Salar Coipasa</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_SalarUyuni11.png" /></td><td>Salar Uyuni</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_SANTACRUZ12.png" /></td><td>SANTA CRUZ</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_TARIJA13.png" /></td><td>TARIJA</td></tr><tr><td style="text-align: center;"><img src="legend/Departamentos_Bolivia_1_14.png" /></td><td></td></tr></table>', layer: layer_Departamentos_Bolivia_1},
+            {label: "Google Hybrid", layer: layer_GoogleHybrid_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        map.addControl(new L.Control.Search({
+            layer: layer_Departamentos_Bolivia_1,
+            initial: false,
+            hideMarkerOnCollapse: true,
+            propertyName: 'NOM_DEP'}));
+        document.getElementsByClassName('search-button')[0].className +=
+         ' fa fa-binoculars';
+        </script>
+    </body>
+</html>
